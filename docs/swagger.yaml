@@ -1,0 +1,209 @@
+definitions:
+  entity.CountryRevenueResponse:
+    properties:
+      country:
+        type: string
+      product_name:
+        type: string
+      total_revenue:
+        type: number
+      transaction_count:
+        type: integer
+    type: object
+  entity.MonthlySalesVolume:
+    properties:
+      month:
+        type: string
+      total_sales:
+        type: integer
+    type: object
+  entity.RegionRevenue:
+    properties:
+      items_sold:
+        type: integer
+      region:
+        type: string
+      total_revenue:
+        type: number
+    type: object
+  entity.TopProduct:
+    properties:
+      availableStock:
+        type: integer
+      product_id:
+        type: string
+      productName:
+        type: string
+      purchaseCount:
+        type: integer
+    type: object
+  errors.ApplicationError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  errors.DomainError:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Returns a simple ping response to verify that the server is running.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ping
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.ApplicationError'
+      summary: Health Check
+      tags:
+      - Utility
+  /v1/metrics/country-revenue:
+    get:
+      consumes:
+      - application/json
+      description: Returns a paginated list of countries with product revenue and
+        transaction count, sorted by total revenue.
+      parameters:
+      - default: 50
+        description: Number of records to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of records to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.CountryRevenueResponse'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/errors.DomainError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.ApplicationError'
+      summary: Get country-level revenue data
+      tags:
+      - Metrics
+  /v1/metrics/monthly-sales:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of months with their total item sales, sorted by
+        highest sales volume.
+      parameters:
+      - default: 12
+        description: Number of top months to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.MonthlySalesVolume'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/errors.DomainError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.ApplicationError'
+      summary: Get monthly sales volume
+      tags:
+      - Metrics
+  /v1/metrics/top-products:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of top frequently purchased products with their
+        total purchased count and current available stock.
+      parameters:
+      - default: 20
+        description: Number of top products to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.TopProduct'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/errors.DomainError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.ApplicationError'
+      summary: Get top frequently purchased products
+      tags:
+      - Metrics
+  /v1/metrics/top-regions:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of regions with the highest total revenue and items
+        sold, sorted by revenue.
+      parameters:
+      - default: 30
+        description: Number of top regions to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.RegionRevenue'
+            type: array
+        "400":
+          description: Invalid request parameters
+          schema:
+            $ref: '#/definitions/errors.DomainError'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/errors.ApplicationError'
+      summary: Get top regions by revenue
+      tags:
+      - Metrics
+swagger: "2.0"

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ABT Metrics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h2 {
+            margin-top: 40px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background: #f2f2f2;
+        }
+        canvas {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>ABT Corporation Dashboard</h1>
+
+<!-- Country Revenue Table -->
+<h2>Country-Level Revenue</h2>
+<table id="countryRevenueTable">
+    <thead>
+    <tr>
+        <th>Country</th>
+        <th>Product Name</th>
+        <th>Total Revenue</th>
+        <th>Transaction Count</th>
+    </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+<!-- Top Products Chart -->
+<h2>Top 20 Frequently Purchased Products</h2>
+<canvas id="topProductsChart"></canvas>
+
+<!-- Monthly Sales Volume -->
+<h2>Monthly Sales Volume</h2>
+<canvas id="monthlySalesChart"></canvas>
+
+<!-- Top Regions -->
+<h2>Top 30 Regions by Revenue</h2>
+<canvas id="topRegionsChart"></canvas>
+
+<script>
+    const BASE_URL = 'http://localhost:8080/v1/metrics';
+
+    async function fetchData(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`Error fetching ${url}`);
+        return res.json();
+    }
+
+    async function loadCountryRevenue() {
+        const data = await fetchData(`${BASE_URL}/country-revenue?limit=100`);
+        const tbody = document.querySelector('#countryRevenueTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(row => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+          <td>${row.country}</td>
+          <td>${row.product_name}</td>
+          <td>${row.total_revenue.toFixed(2)}</td>
+          <td>${row.transaction_count}</td>
+        `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    async function loadTopProductsChart() {
+        const data = await fetchData(`${BASE_URL}/top-products?limit=20`);
+        const labels = data.map(p => p.productName);
+        const values = data.map(p => p.purchaseCount);
+
+        new Chart(document.getElementById('topProductsChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Purchased',
+                    data: values,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                }]
+            }
+        });
+    }
+
+    async function loadMonthlySalesChart() {
+        const data = await fetchData(`${BASE_URL}/monthly-sales?limit=12`);
+        const labels = data.map(m => m.month);
+        const values = data.map(m => m.total_sales);
+
+        new Chart(document.getElementById('monthlySalesChart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Sales',
+                    data: values,
+                    fill: false,
+                    borderColor: 'rgba(255, 99, 132, 0.8)',
+                    tension: 0.3
+                }]
+            }
+        });
+    }
+
+    async function loadTopRegionsChart() {
+        const data = await fetchData(`${BASE_URL}/top-regions?limit=30`);
+        const labels = data.map(r => r.region);
+        const values = data.map(r => r.total_revenue);
+
+        new Chart(document.getElementById('topRegionsChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Revenue',
+                    data: values,
+                    backgroundColor: 'rgba(255, 206, 86, 0.6)'
+                }]
+            }
+        });
+    }
+
+    async function init() {
+        await loadCountryRevenue();
+        await loadTopProductsChart();
+        await loadMonthlySalesChart();
+        await loadTopRegionsChart();
+    }
+
+    init();
+</script>
+</body>
+</html>

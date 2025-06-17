@@ -1,1 +1,0 @@
-package Qoria_project
